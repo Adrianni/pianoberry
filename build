@@ -2,7 +2,7 @@
 
 FORCE_REBUILD=0
 
-function print_help() {
+print_help() {
 	printf "Usage: $0 [options]\n"
 	printf "Options:\n"
 	printf "  --force-rebuild            Force rebuild of the pianoberry-build image.\n"
@@ -28,7 +28,7 @@ while [ $# -gt 0 ]; do
 	shift
 done
 
-if [ $FORCE_REBUILD ] || [ -z "$(docker image ls | grep pianoberry-build)" ]; then
+if [ "$FORCE_REBUILD" -eq 1 ] || [ -z "$(docker image ls | grep pianoberry-build)" ]; then
   echo "Building pianoberry-build image"
   docker rmi $(docker images | grep 'pianoberry-build' | awk '{print $3}')
   docker build --no-cache -q -t pianoberry-build .
