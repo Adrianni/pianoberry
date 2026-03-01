@@ -82,7 +82,7 @@ function download_tcz() {
 	done
 }
 
-download_file ${URL}/${TINYCORE_SERIES}/${TINYCORE_ARCH}/releases/RPi/${TINYCORE_IMAGE}.zip
+download_file ${URL}/${TINYCORE_SERIES}/${TINYCORE_ARCH}/release/RPi/${TINYCORE_IMAGE}.img.gz
 
 for package in $PACKAGES; do
 	download_tcz $package
@@ -90,7 +90,7 @@ done
 
 cd /pianoberry/pianoberry
 
-unzip /build/src/${TINYCORE_IMAGE}.zip
+gunzip -k /build/src/${TINYCORE_IMAGE}.img.gz
 
 dd bs=512 seek=471039 of=pianoberry.img < /dev/null
 parted --script pianoberry.img \
