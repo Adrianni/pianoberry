@@ -14,4 +14,4 @@ VOLUME /build
 
 COPY . /pianoberry/
 
-ENTRYPOINT ["/pianoberry/pianoberry/build"]
+ENTRYPOINT ["/bin/sh", "/pianoberry/pianoberry/build"]
