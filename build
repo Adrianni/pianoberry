@@ -30,7 +30,10 @@ done
 
 if [ "$FORCE_REBUILD" -eq 1 ] || [ -z "$(docker image ls | grep pianoberry-build)" ]; then
   echo "Building pianoberry-build image"
-  docker rmi $(docker images | grep 'pianoberry-build' | awk '{print $3}')
+  OLD_IMAGE_ID=$(docker images | grep 'pianoberry-build' | awk '{print $3}' | head -n 1)
+  if [ -n "$OLD_IMAGE_ID" ]; then
+    docker rmi "$OLD_IMAGE_ID"
+  fi
   docker build --no-cache -q -t pianoberry-build .
 fi
 
