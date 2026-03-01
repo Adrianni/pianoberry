@@ -98,24 +98,34 @@ parted --script pianoberry.img \
 	mkpart primary fat32 8192s 243711s \
 	mkpart primary ext4 243712s 100%
 
-TARGET_LOOP=$(kpartx -av pianoberry.img | awk 'NR==1 {print substr($3, 1, length($3)-2)}')
+TARGET_LOOP=$(losetup --find --show --partscan pianoberry.img)
+if [ -z "$TARGET_LOOP" ]; then
+	echo "Failed to create loop device for pianoberry.img"
+	exit 1
+fi
 
 mkdir -p p1 p2
 
-mkfs.vfat -F 32 -n pianoberry /dev/mapper/${TARGET_LOOP}p1
-mkfs.ext4 -L data /dev/mapper/${TARGET_LOOP}p2
+mkfs.vfat -F 32 -n pianoberry ${TARGET_LOOP}p1
+mkfs.ext4 -L data ${TARGET_LOOP}p2
 
-mount /dev/mapper/${TARGET_LOOP}p1 p1
-mount /dev/mapper/${TARGET_LOOP}p2 p2
+mount ${TARGET_LOOP}p1 p1
+mount ${TARGET_LOOP}p2 p2
 
 sync
 
-SOURCE_LOOP=$(kpartx -av ${TINYCORE_IMAGE}.img | awk 'NR==1 {print substr($3, 1, length($3)-2)}')
+SOURCE_LOOP=$(losetup --find --show --partscan ${TINYCORE_IMAGE}.img)
+if [ -z "$SOURCE_LOOP" ]; then
+	echo "Failed to create loop device for ${TINYCORE_IMAGE}.img"
+	umount p1 p2 2>/dev/null
+	losetup -d ${TARGET_LOOP} 2>/dev/null
+	exit 1
+fi
 
 mkdir -p source_p1 source_p2
 
-mount /dev/mapper/${SOURCE_LOOP}p1 source_p1
-mount /dev/mapper/${SOURCE_LOOP}p2 source_p2
+mount ${SOURCE_LOOP}p1 source_p1
+mount ${SOURCE_LOOP}p2 source_p2
 
 rsync -a source_p1/ p1/
 rsync -a source_p2/ p2/
@@ -241,8 +251,8 @@ df -h p1
 df -h p2
 
 umount p1 p2 source_p1 source_p2
-kpartx -d /dev/${SOURCE_LOOP}
-kpartx -d /dev/${TARGET_LOOP}
+losetup -d ${SOURCE_LOOP}
+losetup -d ${TARGET_LOOP}
 
 # Copy the image to the host
 cp pianoberry.img /build/pianoberry.img
